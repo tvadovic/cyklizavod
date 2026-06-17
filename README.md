@@ -1,4 +1,4 @@
-# Cyklistický Závod
+# Cyklistický Závod / náhradná aplikácia ku hre Tour de France Board Game (https://www.cycling-game.com/en/tour-de-france-board-game)
 
 Digitálna časomiera a výsledkový systém pre cyklistické závody.
 
@@ -29,9 +29,7 @@ Po každej etape:
 
 ## PWA / Android
 
-Aplikáciu je možné nainštalovať ako samostatnú appku na Android:
-- https://pwabuilder.com – zadaj URL vyššie a vygeneruj APK
-- Alebo v Chrome → Pridať na plochu
+Aplikáciu je možné nainštalovať ako samostatnú appku na Android v Chrome → Pridať na plochu alebo inštalovať.
 
 ## Tímy
 
