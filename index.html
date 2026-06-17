@@ -1,0 +1,1634 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Cyklistický Závod</title>
+<meta name="theme-color" content="#1a1a2e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#1a1a2e;color:#e0e0e0;min-height:100vh;display:flex;justify-content:center}
+#app{width:100%;max-width:800px;padding:12px}
+h1{font-size:1.5rem;margin-bottom:12px;color:#ffd700;text-align:center}
+h2{font-size:1.2rem;margin-bottom:10px;color:#4fc3f7}
+h3{font-size:1rem;margin-bottom:8px;color:#81c784}
+.btn{display:block;width:100%;padding:14px;margin:8px 0;border:none;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer;transition:.2s;text-align:center}
+.btn:active{transform:scale(.97)}
+.btn-yellow{background:#ffd700;color:#1a1a2e}
+.btn-yellow:hover{background:#ffed4a}
+.btn-green{background:#2ecc71;color:#fff}
+.btn-green:hover{background:#27ae60}
+.btn-blue{background:#3498db;color:#fff}
+.btn-blue:hover{background:#2980b9}
+.btn-red{background:#e74c3c;color:#fff}
+.btn-red:hover{background:#c0392b}
+.btn-orange{background:#f39c12;color:#fff}
+.btn-orange:hover{background:#e67e22}
+.btn-purple{background:#9b59b6;color:#fff}
+.btn-purple:hover{background:#8e44ad}
+.btn-gray{background:#555;color:#fff}
+.btn-gray:hover{background:#666}
+.btn-sm{padding:10px 16px;font-size:.85rem;width:auto;display:inline-block}
+.btn-xs{padding:6px 10px;font-size:.75rem;width:auto;display:inline-block;margin:2px}
+.card{background:#16213e;border-radius:12px;padding:16px;margin-bottom:12px;border:1px solid #0f3460}
+.flex{display:flex;gap:8px;flex-wrap:wrap}
+.flex-center{display:flex;align-items:center;justify-content:center}
+.flex-between{display:flex;justify-content:space-between;align-items:center}
+.gap-4{gap:4px}
+.mt-8{margin-top:8px}
+.mb-8{margin-bottom:8px}
+.w-full{width:100%}
+input,select{padding:10px 12px;border-radius:8px;border:1px solid #0f3460;background:#1a1a2e;color:#e0e0e0;font-size:1rem;width:100%;margin:4px 0}
+input:focus{outline:2px solid #3498db}
+label{font-size:.85rem;color:#aaa;margin-top:8px;display:block}
+.overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:100;padding:16px}
+.overlay>.card{width:100%;max-width:500px;max-height:90vh;overflow-y:auto}
+.rider-grid{display:grid;gap:6px}
+.rider-grid-6{grid-template-columns:repeat(3,1fr)}
+.rider-btn{padding:8px;border-radius:6px;border:2px solid transparent;background:#1a1a2e;color:#e0e0e0;cursor:pointer;font-size:.85rem;text-align:center;transition:.15s}
+.rider-btn:hover{opacity:.8}
+.rider-btn.selected{border-color:#ffd700;background:#2a2a4e}
+.rider-btn.finished{opacity:.5;pointer-events:none}
+.rider-btn.dnf{opacity:.3;pointer-events:none;text-decoration:line-through}
+.rider-grid-3{grid-template-columns:repeat(3,1fr)}
+.race-header{display:grid;grid-template-columns:1fr auto;gap:8px;margin-bottom:8px}
+.turn-counter{font-size:2rem;font-weight:700;color:#ffd700;text-align:center}
+.stage-name{font-size:.9rem;color:#81c784}
+.base-time{font-size:.8rem;color:#aaa}
+.race-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.race-actions .btn{font-size:.85rem;padding:12px 8px}
+.team-header{font-weight:600;padding:4px 0;border-bottom:1px solid #0f3460;margin-top:8px;display:flex;justify-content:space-between;align-items:center}
+.team-header:first-child{margin-top:0}
+.rider-row{display:grid;grid-template-columns:32px 1fr auto;gap:4px;padding:4px 0;border-bottom:1px solid #0f3460;align-items:center;font-size:.85rem}
+.rider-row .num{font-weight:700;font-size:.8rem;text-align:center}
+.rider-row .name{font-size:.85rem}
+.rider-row .status{font-size:.75rem;color:#aaa;text-align:right}
+.rider-row .status.finished{color:#2ecc71}
+.rider-row .status.dnf{color:#e74c3c}
+.team-color-dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px}
+.jersey-icon{display:inline-block;width:20px;height:20px;border-radius:4px;text-align:center;line-height:20px;font-size:.7rem;font-weight:700;margin-right:4px}
+.jersey-yellow{background:#ffd700;color:#1a1a2e}
+.jersey-green{background:#00c853;color:#fff}
+.jersey-polka{background:linear-gradient(45deg,#fff 25%,#e74c3c 25%,#e74c3c 50%,#fff 50%,#fff 75%,#e74c3c 75%);color:#1a1a2e}
+.jersey-white{background:#fff;color:#1a1a2e}
+.result-table{width:100%;border-collapse:collapse;font-size:.85rem;margin-top:8px}
+.result-table th,.result-table td{padding:6px 4px;text-align:left;border-bottom:1px solid #0f3460}
+.result-table th{color:#aaa;font-weight:600;font-size:.75rem}
+.result-table tr:nth-child(1) td{color:#ffd700;font-weight:600}
+.tab-bar{display:flex;gap:0;margin-bottom:8px}
+.tab-btn{flex:1;padding:10px;border:none;background:#1a1a2e;color:#aaa;cursor:pointer;font-size:.85rem;border-bottom:2px solid transparent;transition:.15s}
+.tab-btn.active{color:#ffd700;border-bottom-color:#ffd700;background:#16213e}
+.stage-list{list-style:none;padding:0}
+.stage-list li{padding:10px;border-bottom:1px solid #0f3460;display:flex;justify-content:space-between;align-items:center;font-size:.9rem}
+.stage-list li:last-child{border-bottom:none}
+.stage-list .selected{background:#1a3a5c}
+.empty-state{text-align:center;padding:24px;color:#666}
+.form-group{margin-bottom:8px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:480px){
+  #app{padding:8px}
+  .btn{padding:12px}
+  .rider-grid-6{grid-template-columns:repeat(2,1fr)}
+  .race-actions{grid-template-columns:1fr 1fr}
+  .rider-grid-3{grid-template-columns:repeat(2,1fr)}
+}
+.finish-group-card{background:#0f3460;border-radius:8px;padding:10px;margin:6px 0;font-size:.85rem}
+.finish-group-card .time{color:#ffd700;font-weight:600}
+.no-select{user-select:none;-webkit-user-select:none}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ===== DATA =====
+const DEFAULT_STAGES = [
+  {id:'s0',start:'ROSKILDE',end:'NYBORG',baseTime:2700,sprint:2,mountain:1},
+  {id:'s1',start:'BRIANÇON',end:"ALPE D'HUEZ",baseTime:3600,sprint:1,mountain:3},
+  {id:'s2',start:'CARCASSONNE',end:'FOIX',baseTime:2400,sprint:2,mountain:1},
+  {id:'s3',start:'PARIS LA DÉFENSE ARENA',end:'PARIS CHAMPS-ÉLYSÉES',baseTime:2100,sprint:3,mountain:0},
+];
+
+const TEAM_COLORS = ['#2ECC71','#E74C3C','#3498DB','#9B59B6','#F39C12','#FFD700'];
+const FIRST_NAMES = ['Adam','Alex','Andrej','David','Filip','Jakub','Jan','Ján','Jozef','Karel','Lukáš','Marek','Martin','Michal','Ondřej','Patrik','Pavel','Peter','Petr','Roman','Stanislav','Štefan','Tomáš','Václav','Viktor'];
+const LAST_NAMES = ['Novák','Svoboda','Novotný','Dvořák','Černý','Procházka','Kučera','Veselý','Horák','Němec','Marek','Pokorný','Pospíšil','Havel','Kovařík','Szabo','Baláž','Mlynár','Kollár','Kratochvíl','Růžička','Bárta','Malý','Dostál','Hudec','Urban'];
+
+// ===== STATE =====
+let state = {
+  screen: 'mainMenu',
+  gameMode: null,
+  teamSize: 6,
+  numTeams: 2,
+  teams: [],
+  selectedStageIds: [],
+  customStages: [],
+  nextRiderId: 0,
+  editingStageIdx: null,
+  // race
+  race: null, // {stage, turn, riderResults:{}, finishGroups:[], complete}
+  // overall after each stage
+  overall: null, // {stages:[], riderTotals:{}, teamTotals:{}}
+  // dialogs
+  dialog: null,
+};
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('cyclingRaceGame');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      state.customStages = parsed.customStages || [];
+      state.nextRiderId = parsed.nextRiderId || 0;
+    }
+    const game = localStorage.getItem('cyclingRaceSave');
+    if (game) {
+      return JSON.parse(game);
+    }
+  } catch(e) {}
+  return null;
+}
+
+function saveCustomStages() {
+  try {
+    localStorage.setItem('cyclingRaceGame', JSON.stringify({
+      customStages: state.customStages,
+      nextRiderId: state.nextRiderId,
+    }));
+  } catch(e) {}
+}
+
+function saveGame() {
+  try {
+    localStorage.setItem('cyclingRaceSave', JSON.stringify({
+      gameMode: state.gameMode,
+      teamSize: state.teamSize,
+      teams: state.teams,
+      selectedStageIds: state.selectedStageIds,
+      race: state.race,
+      overall: state.overall,
+      customStages: state.customStages,
+      nextRiderId: state.nextRiderId,
+    }));
+  } catch(e) {}
+}
+
+function deleteSave() {
+  try { localStorage.removeItem('cyclingRaceSave'); } catch(e) {}
+}
+
+// ===== HELPERS =====
+function getStage(id) {
+  if (id.startsWith('d_')) return DEFAULT_STAGES.find(s => s.id === id.replace('d_',''));
+  if (id.startsWith('c_')) return state.customStages.find(s => s.id === id.replace('c_',''));
+  return null;
+}
+
+function getAllStages() {
+  return [
+    ...DEFAULT_STAGES.map(s => ({...s, id:'d_'+s.id, source:'default'})),
+    ...state.customStages.map(s => ({...s, id:'c_'+s.id, source:'custom'})),
+  ];
+}
+
+function fmtTime(secs) {
+  if (secs == null || secs === Infinity) return 'DNF';
+  const m = Math.floor(secs / 60);
+  const s = Math.floor(secs % 60);
+  return `${m}:${s.toString().padStart(2,'0')}`;
+}
+
+function fmtTimeMs(secs) {
+  if (secs == null || secs === Infinity) return 'DNF';
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return `${m}:${s.toFixed(1).padStart(4,'0')}`;
+}
+
+function genRiderName() {
+  const first = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
+  const last = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
+  return `${first} ${last}`;
+}
+
+function genRiderNum(teamIdx, riderIdx) {
+  return teamIdx * state.teams[0].riders.length + riderIdx + 1;
+}
+
+function getRiderGlobalId(teamIdx, riderIdx) {
+  return `r_${teamIdx}_${riderIdx}`;
+}
+
+function findRider(id) {
+  for (let t = 0; t < state.teams.length; t++) {
+    for (let ri = 0; ri < state.teams[t].riders.length; ri++) {
+      if (state.teams[t].riders[ri].id === id) return {teamIdx:t, riderIdx:ri, rider:state.teams[t].riders[ri]};
+    }
+  }
+  return null;
+}
+
+function getActiveRiders() {
+  const riders = [];
+  for (let t = 0; t < state.teams.length; t++) {
+    for (let ri = 0; ri < state.teams[t].riders.length; ri++) {
+      riders.push(state.teams[t].riders[ri]);
+    }
+  }
+  return riders;
+}
+
+function getRaceRiderIds() {
+  const rr = state.race?.riderResults || {};
+  return Object.keys(rr);
+}
+
+function getAvailableRiderIds() {
+  const rr = state.race?.riderResults || {};
+  return Object.keys(rr).filter(id => rr[id].stageTime == null && !rr[id].isDnf);
+}
+
+function getFinishedRiderIds() {
+  const rr = state.race?.riderResults || {};
+  return Object.keys(rr).filter(id => rr[id].stageTime != null);
+}
+
+function getDnfRiderIds() {
+  const rr = state.race?.riderResults || {};
+  return Object.keys(rr).filter(id => rr[id].isDnf);
+}
+
+function isStageComplete() {
+  if (!state.race) return true;
+  const rr = state.race.riderResults;
+  return Object.keys(rr).length > 0 && Object.keys(rr).every(id => rr[id].stageTime != null || rr[id].isDnf);
+}
+
+function calcRiderStageTime(riderId) {
+  const rr = state.race.riderResults[riderId];
+  if (!rr) return null;
+  if (rr.isDnf) return state.race.stage.baseTime + 99999;
+  if (rr.stageTime != null) return rr.stageTime;
+  return null;
+}
+
+function ensureRiderResults() {
+  if (!state.race) return;
+  for (let t = 0; t < state.teams.length; t++) {
+    for (let ri = 0; ri < state.teams[t].riders.length; ri++) {
+      const id = state.teams[t].riders[ri].id;
+      if (!state.race.riderResults[id]) {
+        state.race.riderResults[id] = {stageTime:null,finishExtra:null,sprintPoints:0,mountainPoints:0,isDnf:false,finishOrder:null};
+      }
+    }
+  }
+}
+
+function getTeamIdxForRider(riderId) {
+  for (let t = 0; t < state.teams.length; t++) {
+    for (let ri = 0; ri < state.teams[t].riders.length; ri++) {
+      if (state.teams[t].riders[ri].id === riderId) return t;
+    }
+  }
+  return -1;
+}
+
+// ===== RENDER =====
+const $ = (id) => document.getElementById(id);
+
+function render() {
+  const app = document.getElementById('app');
+  if (state.dialog) {
+    app.innerHTML = renderDialog();
+    return;
+  }
+  switch (state.screen) {
+    case 'mainMenu': renderMainMenu(); break;
+    case 'gameMode': renderGameMode(); break;
+    case 'stageSelection': renderStageSelection(); break;
+    case 'singleStageSelect': renderSingleStageSelect(); break;
+    case 'addCustomStage': renderAddCustomStage(); break;
+    case 'teamSize': renderTeamSize(); break;
+    case 'numTeams': renderNumTeams(); break;
+    case 'teamSetup': renderTeamSetup(); break;
+    case 'startList': renderStartList(); break;
+    case 'drawOrder': renderDrawOrder(); break;
+    case 'race': renderRace(); break;
+    case 'stageResults': renderStageResults(); break;
+    case 'finalResults': renderFinalResults(); break;
+    default: renderMainMenu();
+  }
+}
+
+function renderMainMenu() {
+  const saved = loadState();
+  document.getElementById('app').innerHTML = `
+    <div style="text-align:center;padding:32px 0">
+      <div style="font-size:3rem;margin-bottom:8px">🚴</div>
+      <h1>Cyklistický Závod</h1>
+      <p style="color:#aaa;margin-bottom:24px">Digitálna časomiera a výsledkový systém</p>
+    </div>
+    <div class="card">
+      <button class="btn btn-yellow" onclick="startNewGame()">🏁 START GAME</button>
+      ${saved ? `<button class="btn btn-blue" onclick="loadGame()">💾 LOAD GAME</button>` : ''}
+      ${saved ? `<button class="btn btn-gray" style="margin-top:16px;font-size:.8rem" onclick="deleteSave();render()">🗑️ Vymazať uloženú hru</button>` : ''}
+    </div>
+    ${state.customStages.length > 0 ? `<div class="card"><p style="color:#aaa;font-size:.85rem">${state.customStages.length} vlastn${state.customStages.length === 1 ? 'á' : 'é'} etap${state.customStages.length === 1 ? 'a' : 'y'} uložená${state.customStages.length === 1 ? '' : 'é'} z predchádzajúcich hier</p></div>` : ''}
+  `;
+}
+
+function renderGameMode() {
+  document.getElementById('app').innerHTML = `
+    <h2>Výber režimu</h2>
+    <div class="card">
+      <button class="btn btn-green" onclick="setGameMode('stageRace')">🏁 STAGE RACE</button>
+      <p style="color:#aaa;font-size:.85rem;margin:4px 0 16px 0">Etapový závod – poskladajte si vlastné etapy</p>
+      <button class="btn btn-orange" onclick="setGameMode('singleRace')">🚴 SINGLE RACE</button>
+      <p style="color:#aaa;font-size:.85rem;margin:4px 0 0 0">Jednorázový závod – vyberte jednu etapu</p>
+    </div>
+    <button class="btn btn-gray" onclick="goScreen('mainMenu')">← Späť</button>
+  `;
+}
+
+function renderStageSelection() {
+  const stages = getAllStages();
+  document.getElementById('app').innerHTML = `
+    <h2>Výber etáp pre závod</h2>
+    <p style="color:#aaa;font-size:.85rem;margin-bottom:8px">Vyberte etapy a usporiadajte ich v požadovanom poradí</p>
+    <div class="card">
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <button class="btn btn-green btn-sm" onclick="showAddCustomStage()">+ ADD STAGE (vlastná)</button>
+      </div>
+      <ul class="stage-list" id="stageList">
+        ${stages.map(s => {
+          const selIdx = state.selectedStageIds.indexOf(s.id);
+          const isSelected = selIdx >= 0;
+          const d = s.source === 'default' ? '' : `<span style="color:#f39c12;font-size:.75rem">(vlastná)</span>`;
+          let editBtn = '';
+          if (s.source === 'custom') {
+            const origId = s.id.replace(/^c_/, '');
+            const idx = state.customStages.findIndex(cs => cs.id === origId);
+            if (idx >= 0) editBtn = `<button class="btn btn-xs btn-gray" onclick="event.stopPropagation();editCustomStage(${idx})" style="padding:2px 6px">✏️</button>`;
+          } else {
+            editBtn = `<button class="btn btn-xs btn-gray" onclick="event.stopPropagation();editDefaultStage('${s.id}')" style="padding:2px 6px">✏️</button>`;
+          }
+          return `<li class="${isSelected ? 'selected' : ''}" onclick="toggleStage('${s.id}')">
+            <span>${s.start} › ${s.end} ${d}<br><span style="font-size:.75rem;color:#aaa">${fmtTime(s.baseTime)} · Sprint: ${s.sprint} · Hory: ${s.mountain}</span></span>
+            <span>${editBtn} ${isSelected ? `#${selIdx+1} ✅` : '➕'}</span>
+          </li>`;
+        }).join('')}
+      </ul>
+      <div style="margin-top:8px">
+        <p style="color:#aaa;font-size:.85rem">Vybrané: ${state.selectedStageIds.length > 0 ? state.selectedStageIds.map(id => { const s=getStage(id); return s ? s.start+' › '+s.end : ''; }).join(', ') : 'žiadna'}</p>
+      </div>
+    </div>
+    ${state.selectedStageIds.length > 0 ? `<button class="btn btn-yellow" onclick="confirmStages()">✅ Potvrdiť etapy (${state.selectedStageIds.length})</button>` : `<button class="btn btn-gray" disabled style="opacity:.5">✅ Vyberte aspoň 1 etapu</button>`}
+    <button class="btn btn-gray" onclick="goScreen('gameMode')">← Späť</button>
+  `;
+}
+
+function renderSingleStageSelect() {
+  const stages = getAllStages();
+  document.getElementById('app').innerHTML = `
+    <h2>Výber etapy</h2>
+    <div class="card">
+      <ul class="stage-list">
+        ${stages.map(s => {
+          let editBtn = '';
+          if (s.source === 'custom') {
+            const origId = s.id.replace(/^c_/, '');
+            const idx = state.customStages.findIndex(cs => cs.id === origId);
+            if (idx >= 0) editBtn = `<button class="btn btn-xs btn-gray" onclick="event.stopPropagation();editCustomStage(${idx})" style="padding:2px 6px">✏️</button>`;
+          } else {
+            editBtn = `<button class="btn btn-xs btn-gray" onclick="event.stopPropagation();editDefaultStage('${s.id}')" style="padding:2px 6px">✏️</button>`;
+          }
+          return `<li onclick="selectSingleStage('${s.id}')" style="cursor:pointer">
+            <span>${s.start} › ${s.end}<br><span style="font-size:.75rem;color:#aaa">${fmtTime(s.baseTime)} · Sprint: ${s.sprint} · Hory: ${s.mountain}</span></span>
+            <span>${editBtn} ${state.selectedStageIds[0] === s.id ? '✅' : '➡️'}</span>
+          </li>`;
+        }).join('')}
+      </ul>
+    </div>
+    <button class="btn btn-yellow" onclick="showAddCustomStage()" style="margin-bottom:8px">+ ADD STAGE (vlastná)</button>
+    ${state.selectedStageIds.length > 0 ? `<button class="btn btn-green" onclick="confirmStages()">✅ Potvrdiť</button>` : `<button class="btn btn-gray" disabled style="opacity:.5">Vyberte etapu</button>`}
+    <button class="btn btn-gray" onclick="goScreen('gameMode')">← Späť</button>
+  `;
+}
+
+function renderAddCustomStage() {
+  const editing = state.editingStageIdx != null && state.editingStageIdx >= 0 && state.editingStageIdx < state.customStages.length;
+  const st = editing ? state.customStages[state.editingStageIdx] : null;
+  const title = editing ? `Upraviť etapu` : 'Pridať vlastnú etapu';
+  const sVal = editing ? st.start : '';
+  const eVal = editing ? st.end : '';
+  const tVal = editing ? fmtTime(st.baseTime) : '45:00';
+  const dVal = editing && st.distance ? st.distance : '';
+  const spVal = editing ? st.sprint : 1;
+  const mVal = editing ? st.mountain : 1;
+  document.getElementById('app').innerHTML = `
+    <h2>${title}</h2>
+    <div class="card">
+      <div class="form-group">
+        <label>Štartovacie mesto</label>
+        <input type="text" id="custStart" value="${sVal}" placeholder="napr. BRATISLAVA">
+      </div>
+      <div class="form-group">
+        <label>Cieľové mesto</label>
+        <input type="text" id="custEnd" value="${eVal}" placeholder="napr. TRNAVA">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Základný čas (mm:ss)</label>
+          <input type="text" id="custTime" value="${tVal}" placeholder="45:00">
+        </div>
+        <div class="form-group">
+          <label>Dĺžka (km, voliteľné)</label>
+          <input type="number" id="custDist" value="${dVal}" placeholder="150">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Počet sprinterských prémií</label>
+          <input type="number" id="custSprint" value="${spVal}" min="0" max="5">
+        </div>
+        <div class="form-group">
+          <label>Počet horských prémií</label>
+          <input type="number" id="custMountain" value="${mVal}" min="0" max="5">
+        </div>
+      </div>
+      <button class="btn btn-green mt-8" onclick="saveCustomStage()">💾 ${editing ? 'Aktualizovať' : 'Uložiť'} etapu</button>
+      ${editing ? `<button class="btn btn-red mt-8" onclick="deleteCustomStage()">🗑️ Zmazať etapu</button>` : ''}
+    </div>
+    <button class="btn btn-gray" onclick="cancelEditStage()">← Späť</button>
+  `;
+}
+
+function renderTeamSize() {
+  document.getElementById('app').innerHTML = `
+    <h2>Veľkosť tímu</h2>
+    <div class="card">
+      <p style="color:#aaa;margin-bottom:12px">Koľko jazdcov bude v každom tíme? (3–6)</p>
+      <div class="flex gap-4" id="teamSizeBtns">
+        ${[3,4,5,6].map(n => `<button class="btn ${state.teamSize === n ? 'btn-yellow' : 'btn-gray'} btn-sm" onclick="state.teamSize=${n};render()">${n}</button>`).join('')}
+      </div>
+    </div>
+    <button class="btn btn-green" onclick="goScreen('numTeams')">✅ Potvrdiť (${state.teamSize} jazdcov)</button>
+    <button class="btn btn-gray" onclick="goScreen(state.gameMode === 'stageRace' ? 'stageSelection' : 'singleStageSelect')">← Späť</button>
+  `;
+}
+
+function renderNumTeams() {
+  document.getElementById('app').innerHTML = `
+    <h2>Počet tímov</h2>
+    <div class="card">
+      <p style="color:#aaa;margin-bottom:12px">Koľko tímov bude súťažiť? (1–6, ${state.teamSize} jazdcov každý)</p>
+      <div class="flex gap-4" id="numTeamsBtns">
+        ${[1,2,3,4,5,6].map(n => `<button class="btn ${state.numTeams === n ? 'btn-yellow' : 'btn-gray'} btn-sm" onclick="state.numTeams=${n};render()">${n}</button>`).join('')}
+      </div>
+    </div>
+    <button class="btn btn-green" onclick="initTeams()">✅ Potvrdiť</button>
+    <button class="btn btn-gray" onclick="goScreen('teamSize')">← Späť</button>
+  `;
+}
+
+function renderTeamSetup() {
+  let html = `<h2>Nastavenie tímov</h2>`;
+  for (let i = 0; i < state.teams.length; i++) {
+    const t = state.teams[i];
+    html += `<div class="card" style="border-left:4px solid ${t.color}">
+      <div class="flex-between">
+        <label>Názov tímu ${i+1}</label>
+        <input type="color" value="${t.color}" onchange="changeTeamColor(${i}, this.value)" style="width:40px;height:40px;padding:2px;cursor:pointer">
+      </div>
+      <input type="text" value="${t.name}" onchange="changeTeamName(${i}, this.value)" placeholder="Názov tímu">
+      <div style="margin-top:8px">
+        ${t.riders.map((r,ri) => `<div style="display:flex;gap:4px;align-items:center;margin:3px 0">
+          <span style="font-weight:700;font-size:.8rem;color:#aaa;min-width:24px;text-align:right">#${r.number}</span>
+          <input type="text" value="${r.name}" onchange="changeRiderName('${r.id}', this.value)" style="padding:6px 8px;font-size:.85rem" placeholder="Meno jazdca">
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }
+  html += `<button class="btn btn-yellow" onclick="confirmTeams()">✅ Potvrdiť tímy</button>
+    <button class="btn btn-gray" onclick="goScreen('numTeams')">← Späť</button>`;
+  document.getElementById('app').innerHTML = html;
+}
+
+function renderStartList() {
+  let html = `<h2>Štartovacia listina</h2>`;
+  for (let i = 0; i < state.teams.length; i++) {
+    const t = state.teams[i];
+    html += `<div class="card" style="border-left:4px solid ${t.color}">
+      <div class="team-header" style="border-bottom-color:${t.color};color:${t.color}">
+        <span>🏁 ${t.name}</span>
+        <span style="font-size:.75rem">${t.riders.length} jazdcov</span>
+      </div>
+      ${t.riders.map(r => `<div class="rider-row">
+        <span class="num" style="color:${t.color}">${r.number}</span>
+        <span class="name">${r.name}</span>
+        <span></span>
+      </div>`).join('')}
+    </div>`;
+  }
+  html += `<button class="btn btn-green" onclick="startDrawOrder()">🎲 Ďalej – LOSOVANIE PORADIA</button>
+    <button class="btn btn-gray" onclick="goScreen('teamSetup')">← Späť</button>`;
+  document.getElementById('app').innerHTML = html;
+}
+
+function renderDrawOrder() {
+  if (!state.race) { goScreen('startList'); return; }
+  const stage = state.race.stage;
+  const isFirstStage = getFinishedRiderIds().length === 0 || !state.overall || Object.keys(state.overall.riderTotals).length === 0;
+  let html = `<h2>Štartové poradie</h2>
+    <div class="card">
+      <p style="color:#aaa;margin-bottom:8px">Etapa: ${stage.start} › ${stage.end}</p>
+      <p style="color:#81c784;font-size:.85rem">${isFirstStage ? 'Pre prvú etapu je potrebné vylosovať poradie jazdcov na štarte.' : 'Poradie na štarte podľa celkového poradia jednotlivcov (žltý dres).'}</p>
+    </div>`;
+  if (state.race?.startingOrder) {
+    html += `<div class="card">
+      <h3>🎲 Štartové poradie</h3>
+      ${state.race.startingOrder.map((riderId, i) => {
+        const info = findRider(riderId);
+        if (!info) return '';
+        const team = state.teams[info.teamIdx];
+        return `<div style="display:flex;align-items:center;gap:4px;padding:4px 0;border-bottom:1px solid #0f3460;font-size:.85rem">
+          <span style="font-weight:700;color:#ffd700;min-width:24px">${i+1}.</span>
+          <span class="team-color-dot" style="background:${team.color}"></span>
+          <span>#${info.rider.number} ${info.rider.name}</span>
+          <span style="color:#aaa;font-size:.75rem;margin-left:auto">${team.name}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+  html += `<div class="flex" style="gap:8px;flex-wrap:wrap">
+    ${!state.race?.startingOrder ? `<button class="btn btn-yellow" onclick="drawOrder()">🎲 DRAW</button>` : ''}
+    ${state.race?.startingOrder ? `<button class="btn btn-green" onclick="startRace()">🏁 START</button>` : ''}
+  </div>
+  <button class="btn btn-gray" onclick="goScreen('startList')">← Späť</button>`;
+  document.getElementById('app').innerHTML = html;
+}
+
+function renderRace() {
+  if (!state.race) { renderStageResults(); return; }
+  const race = state.race;
+  const stage = race.stage;
+  const currentTime = stage.baseTime + race.turn * 60;
+  const avail = getAvailableRiderIds();
+  const total = Object.keys(race.riderResults).length;
+  const done = total - avail.length;
+  let html = `<div class="race-header">
+    <div>
+      <div class="stage-name">🚴 ${stage.start} › ${stage.end}</div>
+      <div class="base-time">Základ: ${fmtTime(stage.baseTime)} · ${stage.sprint > 0 ? `${stage.sprint}× Sprint` : ''}${stage.sprint > 0 && stage.mountain > 0 ? ' · ' : ''}${stage.mountain > 0 ? `${stage.mountain}× Hory` : ''}</div>
+    </div>
+    <div class="turn-counter">
+      ${race.turn}<span style="font-size:1rem;color:#aaa">T</span>
+      <div style="font-size:.75rem;color:#aaa">${fmtTime(currentTime)}</div>
+    </div>
+  </div>`;
+  const sprintLeft = getSprintAwardsLeft();
+  const mountainLeft = getMountainAwardsLeft();
+  html += `<div class="race-actions">
+    <button class="btn btn-yellow btn-sm" onclick="doTurn()">⏱ TURN (${race.turn+1})</button>
+    <button class="btn btn-green btn-sm" onclick="doSprint()" ${stage.sprint < 1 || sprintLeft < 1 ? 'style="opacity:.3"' : ''}>⚡ ${sprintLeft}× SPRINT</button>
+    <button class="btn btn-orange btn-sm" onclick="doMountain()" ${stage.mountain < 1 || mountainLeft < 1 ? 'style="opacity:.3"' : ''}>🗻 ${mountainLeft}× MOUNTAIN</button>
+    <button class="btn btn-red btn-sm" onclick="doFinish()">🏁 FINISH (${done}/${total})</button>
+    <button class="btn btn-blue btn-sm" style="grid-column:span 2" onclick="showResults()">📊 RESULTS</button>
+  </div>`;
+  if (race.finishGroups.length > 0) {
+    html += `<div class="card" style="padding:8px">
+      <div style="font-size:.75rem;color:#aaa;margin-bottom:4px">Cieľové skupiny:</div>
+      ${race.finishGroups.map(g => `<div class="finish-group-card">
+        <span class="time">+${fmtTime(g.extraSeconds)}</span>
+        <span style="color:#aaa"> → </span>
+        <span>#${g.riderIds.map(id => { const r = findRider(id); return r ? r.rider.number : ''; }).join(', #')}</span>
+      </div>`).join('')}
+    </div>`;
+  }
+  html += `<div>`;
+  for (let t = 0; t < state.teams.length; t++) {
+    const team = state.teams[t];
+    const teamRiders = team.riders.filter(r => race.riderResults[r.id]);
+    html += `<div class="team-header" style="border-bottom-color:${team.color};color:${team.color}">🚴 ${team.name}</div>`;
+    for (const r of teamRiders) {
+      const rr = race.riderResults[r.id];
+      let status = '<span style="color:#2ecc71">✓ v cieli</span>';
+      let extra = '';
+      if (rr.isDnf) status = '<span style="color:#e74c3c">✗ DNF</span>';
+      else if (rr.stageTime == null) status = `<span style="color:#4fc3f7">🏁 v hre</span>`;
+      else extra = fmtTime(rr.stageTime);
+      if (rr.sprintPoints > 0) extra += `<span style="color:#00c853;font-size:.75rem"> ⚡${rr.sprintPoints}</span>`;
+      if (rr.mountainPoints > 0) extra += `<span style="color:#f39c12;font-size:.75rem"> 🗻${rr.mountainPoints}</span>`;
+      html += `<div class="rider-row">
+        <span class="num" style="color:${team.color}">${r.number}</span>
+        <span class="name">${r.name}</span>
+        <span class="status">${status} ${extra}</span>
+      </div>`;
+    }
+  }
+  html += `</div>`;
+  html += `<div class="flex mt-8" style="gap:6px">
+    <button class="btn btn-blue btn-sm" onclick="saveGame();render()">💾 SAVE</button>
+    <button class="btn btn-gray btn-sm" onclick="quitRaceConfirm()">🚪 Ukončiť etapu</button>
+  </div>`;
+  document.getElementById('app').innerHTML = html;
+}
+
+let stageResultsView = 'stage';
+
+function renderStageResults() {
+  if (!state.race) { goScreen('finalResults'); return; }
+  const race = state.race;
+  const stage = race.stage;
+  const riders = getActiveRiders();
+  const ranked = riders.map(r => {
+    const rr = race.riderResults[r.id];
+    const st = calcRiderStageTime(r.id);
+    return {rider:r, result:rr, stageTime:st};
+  }).sort((a,b) => {
+    if (a.stageTime == null && b.stageTime == null) return 0;
+    if (a.stageTime == null) return 1;
+    if (b.stageTime == null) return -1;
+    if (a.stageTime !== b.stageTime) return a.stageTime - b.stageTime;
+    const aOrd = a.result?.finishOrder ?? 999;
+    const bOrd = b.result?.finishOrder ?? 999;
+    return aOrd - bOrd;
+  });
+  if (state.overall) computeOverall();
+  let html = `<h2>Výsledky</h2>
+    <div class="card" style="padding:8px">
+      <p style="color:#81c784">${stage.start} › ${stage.end}</p>
+      <p style="color:#aaa;font-size:.85rem">Turnov: ${race.turn} · ${fmtTime(stage.baseTime + race.turn*60)}</p>
+    </div>
+    <div class="tab-bar">
+      <button class="tab-btn ${stageResultsView === 'stage' ? 'active' : ''}" onclick="switchStageView('stage')">🏁 STAGE RANKING</button>
+      <button class="tab-btn ${stageResultsView === 'general' ? 'active' : ''}" onclick="switchStageView('general')">🏆 GENERAL RANKING</button>
+    </div>
+    <div id="stageViewContent">`;
+  if (stageResultsView === 'stage') {
+    html += renderResultTabs(ranked, null);
+  } else {
+    html += renderGeneralResultTabs();
+  }
+  html += `</div>`;
+  const nextIdx = state.gameMode === 'stageRace' ? state.selectedStageIds.indexOf(race.stage.id) + 1 : -1;
+  const isLast = state.gameMode !== 'stageRace' || nextIdx >= state.selectedStageIds.length;
+  html += `<div class="flex" style="gap:8px;margin-top:8px">
+    ${!isLast ? `<button class="btn btn-green" onclick="nextStage()">🏁 Ďalšia etapa</button>` : `<button class="btn btn-yellow" onclick="goToFinalResults()">🏆 Celkové výsledky</button>`}
+    ${race.finishGroups.length > 0 ? `<button class="btn btn-blue" onclick="goScreen('race')">← Späť na etapu</button>` : ''}
+  </div>`;
+  document.getElementById('app').innerHTML = html;
+}
+
+function switchStageView(view) {
+  stageResultsView = view;
+  renderStageResults();
+}
+
+function renderGeneralResultTabs() {
+  if (!state.overall) computeOverall();
+  const ov = state.overall;
+  if (!ov) return '<p style="color:#666;padding:12px">Žiadne celkové výsledky</p>';
+  const riders = getActiveRiders();
+  const indRiders = riders.map(r => {
+    const tot = ov.riderTotals[r.id] || {time:0,sprint:0,mountain:0};
+    return {rider:r, ...tot};
+  });
+  const yellow = [...indRiders].filter(r => r.time > 0).sort((a,b) => {
+    if (a.time !== b.time) return a.time - b.time;
+    return (a._lastFinishOrder ?? 999) - (b._lastFinishOrder ?? 999);
+  });
+  const green = [...indRiders].filter(r => r.sprint > 0).sort((a,b) => b.sprint - a.sprint);
+  const polka = [...indRiders].filter(r => r.mountain > 0).sort((a,b) => b.mountain - a.mountain);
+  const teamT = [];
+  for (let t = 0; t < state.teams.length; t++) {
+    const tr = state.teams[t].riders.map(r => {
+      const tot = ov.riderTotals[r.id];
+      return {rider:r, time: tot ? tot.time : 0};
+    }).filter(r => r.time > 0).sort((a,b) => a.time - b.time);
+    const best3 = tr.slice(0,3);
+    if (best3.length >= 1) teamT.push({team:state.teams[t], totalTime: best3.reduce((s,r)=>s+r.time,0), best3});
+  }
+  teamT.sort((a,b) => a.totalTime - b.totalTime);
+  window._resData = {ind:yellow, sprint:green, mountain:polka, teamRes:teamT, timeLabel:'Celkový čas', jersey:'yellow'};
+  resultTab = 'ind';
+  const tabs = ['ind','sprint','mountain','team'];
+  const labels = ['👤 INDIVIDUAL','⚡ SPRINT','🗻 MOUNTAIN','🚴 TEAM'];
+  let h = `<div class="tab-bar result-tab-bar">${tabs.map((t,i) => `<button class="tab-btn ${i===0?'active':''}" onclick="switchResTab('${t}')">${labels[i]}</button>`).join('')}</div>`;
+  h += `<div id="resContent">${buildIndTable(yellow, 'yellow', 'Celkový čas')}</div>`;
+  return h;
+}
+
+function renderFinalResults() {
+  if (!state.overall) {
+    computeOverall();
+  }
+  const ov = state.overall;
+  if (!ov) {
+    document.getElementById('app').innerHTML = `<h2>Žiadne výsledky</h2><button class="btn btn-yellow" onclick="goScreen('mainMenu')">← Hlavné menu</button>`;
+    return;
+  }
+  const riders = getActiveRiders();
+  const indRiders = riders.map(r => {
+    const tot = ov.riderTotals[r.id] || {time:0,sprint:0,mountain:0};
+    return {rider:r, ...tot};
+  });
+  // Yellow (time)
+  const yellow = [...indRiders].filter(r => r.time > 0).sort((a,b) => {
+    if (a.time !== b.time) return a.time - b.time;
+    return (a._lastFinishOrder ?? 999) - (b._lastFinishOrder ?? 999);
+  });
+  // Green (sprint)
+  const green = [...indRiders].filter(r => r.sprint > 0).sort((a,b) => b.sprint - a.sprint);
+  // Polka (mountain)
+  const polka = [...indRiders].filter(r => r.mountain > 0).sort((a,b) => b.mountain - a.mountain);
+  // Team
+  const teamTotals = [];
+  for (let t = 0; t < state.teams.length; t++) {
+    const teamRiders = state.teams[t].riders.map(r => {
+      const tot = ov.riderTotals[r.id];
+      return {rider:r, time:tot ? tot.time : 0};
+    }).filter(r => r.time > 0).sort((a,b) => a.time - b.time);
+    const best3 = teamRiders.slice(0,3);
+    if (best3.length >= 1) {
+      teamTotals.push({team:state.teams[t], riders:best3, totalTime: best3.reduce((s,r)=>s+r.time,0)});
+    }
+  }
+  teamTotals.sort((a,b) => a.totalTime - b.totalTime);
+
+  const stages = ov.stages || [];
+  let html = `<h2>🏆 Celkové výsledky</h2>`;
+  if (stages.length > 0) {
+    html += `<div class="card" style="padding:8px;font-size:.8rem;color:#aaa">Absolvované etapy: ${stages.map(s => s.start+' › '+s.end).join(', ')}</div>`;
+  }
+  html += `<div id="finalTabs"><div class="tab-bar">
+    <button class="tab-btn active" onclick="switchFinalTab('ind')">👤 INDIVIDUAL</button>
+    <button class="tab-btn" onclick="switchFinalTab('sprint')">⚡ SPRINT</button>
+    <button class="tab-btn" onclick="switchFinalTab('mountain')">🗻 MOUNTAIN</button>
+    <button class="tab-btn" onclick="switchFinalTab('team')">🚴 TEAM</button>
+  </div></div>`;
+  html += `<div id="finalContent">`;
+  html += buildIndTable(yellow, 'yellow', 'Celkový čas');
+  html += `</div>`;
+  html += `<button class="btn btn-yellow" onclick="goScreen('mainMenu')">🏁 Hlavné menu</button>
+    <button class="btn btn-gray" onclick="saveGame();render()">💾 SAVE</button>`;
+  document.getElementById('app').innerHTML = html;
+  window._finalData = {yellow, green, polka, teamTotals};
+}
+
+function renderIntermediateResults() {
+  if (!state.race) return;
+  const race = state.race;
+  const riders = getActiveRiders();
+  const ranked = riders.map(r => {
+    const rr = race.riderResults[r.id];
+    const st = calcRiderStageTime(r.id);
+    return {rider:r, result:rr, stageTime:st};
+  }).sort((a,b) => {
+    if (a.stageTime == null && b.stageTime == null) return 0;
+    if (a.stageTime == null) return 1;
+    if (b.stageTime == null) return -1;
+    if (a.stageTime !== b.stageTime) return a.stageTime - b.stageTime;
+    const aOrd = a.result?.finishOrder ?? 999;
+    const bOrd = b.result?.finishOrder ?? 999;
+    return aOrd - bOrd;
+  });
+  document.getElementById('app').innerHTML = `
+    <h2>📊 Priebežné výsledky</h2>
+    <div class="card">
+      <p style="color:#81c784">${race.stage.start} › ${race.stage.end}</p>
+      <p style="color:#aaa;font-size:.85rem">Turnov: ${race.turn} · Dokončilo: ${getFinishedRiderIds().length}/${Object.keys(race.riderResults).length}</p>
+    </div>
+    ${renderResultTabs(ranked, null)}
+    <button class="btn btn-blue" onclick="goScreen('race')">← Späť na etapu</button>
+  `;
+}
+
+// ===== RESULT BUILDERS =====
+let resultTab = 'ind';
+
+function renderResultTabs(ranked, ov) {
+  const tableRiders = ranked.map(r => ({rider:r.rider, time:r.stageTime, sprint:r.result?r.result.sprintPoints:0, mountain:r.result?r.result.mountainPoints:0, finishOrder: r.result?.finishOrder}));
+  const ind = [...tableRiders].filter(r => r.time != null).sort((a,b) => {
+    if (a.time !== b.time) return a.time - b.time;
+    return (a.finishOrder ?? 999) - (b.finishOrder ?? 999);
+  });
+  const sprint = [...tableRiders].filter(r => r.sprint > 0).sort((a,b) => b.sprint - a.sprint);
+  const mountain = [...tableRiders].filter(r => r.mountain > 0).sort((a,b) => b.mountain - a.mountain);
+  const teamRes = [];
+  for (let t = 0; t < state.teams.length; t++) {
+    const tr = state.teams[t].riders.map(r => {
+      const found = tableRiders.find(x => x.rider.id === r.id);
+      return {rider:r, time: found ? found.time : null};
+    }).filter(r => r.time != null).sort((a,b) => a.time - b.time);
+    const best3 = tr.slice(0,3);
+    if (best3.length >= 1) {
+      teamRes.push({team:state.teams[t], totalTime: best3.reduce((s,r)=>s+r.time,0), best3});
+    }
+  }
+  teamRes.sort((a,b) => a.totalTime - b.totalTime);
+  window._resData = {ind, sprint, mountain, teamRes, timeLabel:'Čas etapy', jersey:'stage'};
+  resultTab = 'ind';
+  return `<div class="tab-bar result-tab-bar">
+    <button class="tab-btn active" onclick="switchResTab('ind')">👤 INDIVIDUAL</button>
+    <button class="tab-btn" onclick="switchResTab('sprint')">⚡ SPRINT</button>
+    <button class="tab-btn" onclick="switchResTab('mountain')">🗻 MOUNTAIN</button>
+    <button class="tab-btn" onclick="switchResTab('team')">🚴 TEAM</button>
+  </div>
+  <div id="resContent">${buildIndTable(ind, 'stage', 'Čas etapy')}</div>`;
+}
+
+function switchResTab(tab) {
+  resultTab = tab;
+  const data = window._resData;
+  if (!data) return;
+  const el = document.getElementById('resContent');
+  if (!el) return;
+  document.querySelectorAll('.result-tab-bar .tab-btn').forEach(b => b.classList.remove('active'));
+  switch(tab) {
+    case 'ind': el.innerHTML = buildIndTable(data.ind, data.jersey || 'stage', data.timeLabel || 'Čas etapy'); break;
+    case 'sprint': el.innerHTML = buildPointsTable(data.sprint, '⚡ Sprint', 'sprint'); break;
+    case 'mountain': el.innerHTML = buildPointsTable(data.mountain, '🗻 Hory', 'mountain'); break;
+    case 'team': el.innerHTML = buildTeamTable(data.teamRes); break;
+  }
+  document.querySelectorAll('.result-tab-bar .tab-btn').forEach((b,i) => {
+    if (['ind','sprint','mountain','team'][i] === tab) b.classList.add('active');
+  });
+}
+
+function switchFinalTab(tab) {
+  const data = window._finalData;
+  if (!data) return;
+  const el = document.getElementById('finalContent');
+  if (!el) return;
+  document.querySelectorAll('#finalTabs .tab-btn').forEach(b => b.classList.remove('active'));
+  switch(tab) {
+    case 'ind': el.innerHTML = buildIndTable(data.yellow, 'yellow', 'Celkový čas'); break;
+    case 'sprint': el.innerHTML = buildPointsTable(data.green, '⚡ Sprint', 'sprint'); break;
+    case 'mountain': el.innerHTML = buildPointsTable(data.polka, '🗻 Hory', 'mountain'); break;
+    case 'team': el.innerHTML = buildTeamTable(data.teamTotals); break;
+  }
+  const btns = document.querySelectorAll('#finalTabs .tab-btn');
+  const idx = {ind:0, sprint:1, mountain:2, team:3}[tab];
+  if (btns[idx]) btns[idx].classList.add('active');
+}
+
+function buildIndTable(riders, jersey, timeLabel) {
+  if (riders.length === 0) return `<p style="color:#666;padding:12px">Zatiaľ žiadne výsledky</p>`;
+  let j = '';
+  if (jersey === 'yellow') j = `<span class="jersey-icon jersey-yellow">👑</span>`;
+  return `<table class="result-table">
+    <tr><th>#</th><th>Jazdec (tím)</th><th>${timeLabel}</th></tr>
+    ${riders.slice(0,20).map((r,i) => {
+      const info = findRider(r.rider.id);
+      const team = info ? state.teams[info.teamIdx] : null;
+      const teamColor = team ? team.color : '#aaa';
+      const jerseyIcon = i === 0 && jersey === 'yellow' ? '<span class="jersey-icon jersey-yellow">👑</span>' :
+        i === 0 && jersey === 'green' ? '<span class="jersey-icon jersey-green">⚡</span>' :
+        i === 0 && jersey === 'polka' ? '<span class="jersey-icon jersey-polka">🗻</span>' : '';
+      return `<tr>
+        <td>${i+1}</td>
+        <td><span style="color:${teamColor};font-weight:600">#${r.rider.number}</span> ${jerseyIcon}${r.rider.name}<br><span style="font-size:.7rem;color:#aaa">${team ? team.name : ''}</span></td>
+        <td>${fmtTimeMs(r.time)}</td>
+      </tr>`;
+    }).join('')}
+  </table>`;
+}
+
+function buildPointsTable(riders, label, field) {
+  if (riders.length === 0) return `<p style="color:#666;padding:12px">Zatiaľ žiadne body</p>`;
+  return `<table class="result-table">
+    <tr><th>#</th><th>Jazdec (tím)</th><th>Body</th></tr>
+    ${riders.slice(0,20).map((r,i) => {
+      const info = findRider(r.rider.id);
+      const team = info ? state.teams[info.teamIdx] : null;
+      const teamColor = team ? team.color : '#aaa';
+      return `<tr>
+        <td>${i+1}</td>
+        <td><span style="color:${teamColor};font-weight:600">#${r.rider.number}</span> ${r.rider.name}<br><span style="font-size:.7rem;color:#aaa">${team ? team.name : ''}</span></td>
+        <td>${field === 'sprint' ? r.sprint : r.mountain}</td>
+      </tr>`;
+    }).join('')}
+  </table>`;
+}
+
+function buildTeamTable(teams) {
+  if (!teams || teams.length === 0) return `<p style="color:#666;padding:12px">Zatiaľ žiadne výsledky</p>`;
+  return `<table class="result-table">
+    <tr><th>#</th><th>Tím</th><th>Najlepší 3 jazdci</th><th>Celkový čas</th></tr>
+    ${teams.map((t,i) => `<tr>
+      <td>${i+1}</td>
+      <td><span class="team-color-dot" style="background:${t.team.color}"></span>${t.team.name}</td>
+      <td style="font-size:.8rem">${t.best3 ? t.best3.map(r => `#${r.rider.number}`).join(', ') : ''}</td>
+      <td>${fmtTimeMs(t.totalTime)}</td>
+    </tr>`).join('')}
+  </table>`;
+}
+
+// ===== DIALOGS =====
+function renderDialog() {
+  if (!state.dialog) return '';
+  const d = state.dialog;
+  if (d.type === 'sprint' || d.type === 'mountain') return renderSprintMountainDialog(d);
+  if (d.type === 'finishTime') return renderFinishTimeDialog(d);
+  if (d.type === 'finishRiders') return renderFinishRiderDialog(d);
+  if (d.type === 'confirm') return renderConfirmDialog(d);
+  return '';
+}
+
+
+
+function renderSprintMountainDialog(d) {
+  const isSprint = d.type === 'sprint';
+  const label = isSprint ? '⚡ SPRINT POINTS' : '🗻 MOUNTAIN POINTS';
+  const award = d.award || {riderIds: []};
+  const avail = getAvailableRiderIds().filter(id => !award.riderIds.includes(id));
+  const selected = d.selected || [];
+  const maxSel = Math.min(4 - award.riderIds.length, avail.length);
+  const points = [5, 3, 2, 1];
+  let posHtml = '';
+  for (let i = 0; i < 4; i++) {
+    const taken = i < award.riderIds.length;
+    const available = !taken && (i - award.riderIds.length) < maxSel;
+    if (taken) {
+      const info = findRider(award.riderIds[i]);
+      posHtml += `<div style="font-size:.8rem;color:#81c784;padding:2px 0">${i+1}. miesto (${points[i]}b): ✅ #${info ? info.rider.number : '?'} ${info ? info.rider.name : ''}</div>`;
+    } else if (available) {
+      posHtml += `<div style="font-size:.8rem;color:#aaa;padding:2px 0">${i+1}. miesto (${points[i]}b): ⬜ voľné</div>`;
+    } else {
+      posHtml += `<div style="font-size:.8rem;color:#555;padding:2px 0">${i+1}. miesto (${points[i]}b): 🔒</div>`;
+    }
+  }
+  return `<div class="overlay" onclick="if(event.target===this)closeDialog()">
+    <div class="card">
+      <h3>${label}</h3>
+      <p style="color:#aaa;font-size:.85rem">Vyberte jazdcov v poradí, v akom prešli prémiou</p>
+      ${posHtml}
+      <p style="color:#ffd700;font-size:.85rem;margin-bottom:8px">Vybrané: ${selected.length}/${maxSel}</p>
+      <div class="rider-grid rider-grid-6">
+        ${avail.map(id => {
+          const info = findRider(id);
+          if (!info) return '';
+          const sel = selected.includes(id);
+          return `<div class="rider-btn ${sel?'selected':''}" onclick="toggleDialogSel('${id}')" style="border-color:${sel?'#ffd700':state.teams[info.teamIdx].color}20">
+            <span style="font-weight:700;font-size:.9rem">#${info.rider.number}</span><br>
+            <span style="font-size:.7rem">${info.rider.name}</span>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="flex mt-8">
+        <button class="btn btn-green" onclick="confirmSprintMountain('${d.type}')" ${selected.length < 1 ? 'style="opacity:.5"' : ''}>✅ Potvrdiť (${selected.length})</button>
+        <button class="btn btn-gray" onclick="closeDialog()">✕ Zrušiť</button>
+      </div>
+      <button class="btn btn-blue btn-sm mt-8" onclick="finishSprintAward('${d.type}')">✅ Dokončiť prémiu (zvyšok neobsadený)</button>
+    </div>
+  </div>`;
+}
+
+function renderFinishTimeDialog(d) {
+  return `<div class="overlay" onclick="if(event.target===this)closeDialog()">
+    <div class="card">
+      <h3>🏁 SELECT FINISH TIME</h3>
+      <p style="color:#aaa;font-size:.85rem;margin-bottom:8px">Zadajte čas v sekundách pre túto cieľovú skupinu</p>
+      <div class="form-group">
+        <label>Čas (sekundy)</label>
+        <input type="number" id="finishTimeInput" value="${d.extraSeconds || 0}" min="0" step="1" placeholder="napr. 30" style="font-size:1.5rem;text-align:center">
+      </div>
+      <div class="form-group">
+        <label style="color:#e74c3c">
+          <input type="checkbox" id="finishDnfCheck" onchange="document.getElementById('finishTimeInput').disabled=this.checked"> DNF (nedošiel do cieľa)
+        </label>
+      </div>
+      <p style="color:#aaa;font-size:.8rem">Aktuálny čas etapy: ${fmtTime(state.race.stage.baseTime + state.race.turn * 60)}</p>
+      <div class="flex mt-8">
+        <button class="btn btn-green" onclick="confirmFinishTime()">✅ Ďalej – výber jazdcov</button>
+        <button class="btn btn-gray" onclick="closeDialog()">✕ Zrušiť</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderFinishRiderDialog(d) {
+  const avail = getAvailableRiderIds();
+  const selected = d.selected || [];
+  const finishedCnt = getFinishedRiderIds().length;
+  const top3Bonus = finishedCnt < 3 ? ` (prvým 3 v cieli sa odráta bonus -10s, -6s, -4s)` : '';
+  return `<div class="overlay" onclick="if(event.target===this)closeDialog()">
+    <div class="card">
+      <h3>🏁 SELECT RIDERS</h3>
+      <p style="color:#aaa;font-size:.85rem;margin-bottom:8px">Vyberte jazdcov, ktorí došli v tejto skupine (čas: +${d.extraSeconds}s)${top3Bonus}</p>
+      <p style="color:#ffd700;font-size:.85rem;margin-bottom:8px">Vybrané: ${selected.length}</p>
+      <div class="rider-grid rider-grid-6">
+        ${avail.map(id => {
+          const info = findRider(id);
+          if (!info) return '';
+          const sel = selected.includes(id);
+          return `<div class="rider-btn ${sel?'selected':''}" onclick="toggleDialogSel('${id}')" style="border-color:${sel?'#ffd700':state.teams[info.teamIdx].color}20">
+            <span style="font-weight:700;font-size:.9rem">#${info.rider.number}</span><br>
+            <span style="font-size:.7rem">${info.rider.name}</span>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="flex mt-8">
+        <button class="btn btn-green" onclick="saveFinishGroup()" ${selected.length < 1 ? 'style="opacity:.5"' : ''}>💾 SAVE (${selected.length})</button>
+        <button class="btn btn-gray" onclick="closeDialog()">✕ Zrušiť</button>
+      </div>
+      <button class="btn btn-red mt-8" onclick="quickDnfAll()">⚠️ Označiť všetkých ako DNF</button>
+    </div>
+  </div>`;
+}
+
+function renderConfirmDialog(d) {
+  const onConfirm = (d.onConfirm || '').replace(/"/g, '&quot;');
+  return `<div class="overlay" onclick="if(event.target===this)closeDialog()">
+    <div class="card">
+      <h3>${d.title || 'Potvrdenie'}</h3>
+      <p style="margin:12px 0">${d.message || ''}</p>
+      <div class="flex">
+        <button class="btn btn-red" onclick="closeDialog();${onConfirm}">${d.confirmText || 'Áno'}</button>
+        <button class="btn btn-gray" onclick="closeDialog()">${d.cancelText || 'Nie'}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function attachDialogEvents() {}
+
+function closeDialog() {
+  state.dialog = null;
+  render();
+}
+
+function toggleDialogSel(id) {
+  if (!state.dialog) return;
+  const d = state.dialog;
+  if (!d.selected) d.selected = [];
+  const idx = d.selected.indexOf(id);
+  let maxSel = 99;
+  if (d.type === 'sprint' || d.type === 'mountain') {
+    const award = d.award || {riderIds: []};
+    const avail = getAvailableRiderIds().filter(id => !award.riderIds.includes(id));
+    maxSel = Math.min(4 - award.riderIds.length, avail.length);
+  }
+  if (idx >= 0) {
+    d.selected.splice(idx, 1);
+  } else if (d.selected.length < maxSel) {
+    d.selected.push(id);
+  }
+  render();
+}
+
+// ===== ACTION HANDLERS =====
+function goScreen(s) {
+  state.screen = s;
+  state.dialog = null;
+  render();
+}
+
+function startNewGame() {
+  // Reset
+  state.gameMode = null;
+  state.teamSize = 6;
+  state.numTeams = 2;
+  state.teams = [];
+  state.selectedStageIds = [];
+  state.race = null;
+  state.overall = null;
+  state.screen = 'gameMode';
+  deleteSave();
+  render();
+}
+
+function loadGame() {
+  const saved = loadState();
+  if (saved) {
+    state.gameMode = saved.gameMode;
+    state.teamSize = saved.teamSize || 6;
+    state.teams = saved.teams;
+    state.selectedStageIds = saved.selectedStageIds;
+    state.race = saved.race;
+    state.overall = saved.overall;
+    if (saved.customStages) state.customStages = saved.customStages;
+    if (saved.nextRiderId != null) state.nextRiderId = saved.nextRiderId;
+    if (state.race && !state.race.complete) {
+      state.screen = 'race';
+    } else if (state.race?.complete) {
+      state.screen = 'stageResults';
+    } else if (state.overall) {
+      state.screen = 'finalResults';
+    } else {
+      state.screen = 'startList';
+    }
+    render();
+  }
+}
+
+function setGameMode(mode) {
+  state.gameMode = mode;
+  state.selectedStageIds = [];
+  goScreen(mode === 'stageRace' ? 'stageSelection' : 'singleStageSelect');
+}
+
+function toggleStage(id) {
+  const idx = state.selectedStageIds.indexOf(id);
+  if (idx >= 0) {
+    state.selectedStageIds.splice(idx, 1);
+  } else {
+    state.selectedStageIds.push(id);
+  }
+  render();
+}
+
+function selectSingleStage(id) {
+  state.selectedStageIds = [id];
+  render();
+}
+
+function confirmStages() {
+  if (state.selectedStageIds.length < 1) return;
+  goScreen('teamSize');
+}
+
+function showAddCustomStage() {
+  state.editingStageIdx = null;
+  state.screen = 'addCustomStage';
+  render();
+}
+
+function editCustomStage(idx) {
+  state.editingStageIdx = idx;
+  state.screen = 'addCustomStage';
+  render();
+}
+
+function editDefaultStage(prefixedId) {
+  const origId = prefixedId.replace(/^d_/, '');
+  const orig = DEFAULT_STAGES.find(s => s.id === origId);
+  if (!orig) return;
+  const newId = 'cust_' + Date.now() + '_' + Math.random().toString(36).substr(2,4);
+  state.customStages.push({...orig, id: newId});
+  const selIdx = state.selectedStageIds.indexOf(prefixedId);
+  if (selIdx >= 0) state.selectedStageIds[selIdx] = 'c_' + newId;
+  saveCustomStages();
+  state.editingStageIdx = state.customStages.length - 1;
+  state.screen = 'addCustomStage';
+  render();
+}
+
+function cancelEditStage() {
+  state.editingStageIdx = null;
+  goScreen(state.gameMode === 'stageRace' ? 'stageSelection' : 'singleStageSelect');
+}
+
+function deleteCustomStage() {
+  if (state.editingStageIdx == null || state.editingStageIdx < 0) return;
+  if (!confirm('Naozaj zmazať túto etapu?')) return;
+  state.customStages.splice(state.editingStageIdx, 1);
+  state.editingStageIdx = null;
+  saveCustomStages();
+  state.screen = state.gameMode === 'stageRace' ? 'stageSelection' : 'singleStageSelect';
+  render();
+}
+
+function saveCustomStage() {
+  const start = document.getElementById('custStart')?.value.trim();
+  const end = document.getElementById('custEnd')?.value.trim();
+  const timeStr = document.getElementById('custTime')?.value.trim();
+  const dist = document.getElementById('custDist')?.value.trim();
+  let sprintCount = 1, mountainCount = 1;
+  const sprintEl = document.getElementById('custSprint');
+  const mountainEl = document.getElementById('custMountain');
+  if (sprintEl) { const v = parseInt(sprintEl.value); if (!isNaN(v) && v >= 0) sprintCount = v; }
+  if (mountainEl) { const v = parseInt(mountainEl.value); if (!isNaN(v) && v >= 0) mountainCount = v; }
+  if (!start || !end) { alert('Vyplňte štart a cieľ'); return; }
+  let baseTime = 2700;
+  if (timeStr) {
+    const parts = timeStr.split(':');
+    if (parts.length === 2) {
+      const m = parseInt(parts[0]) || 0;
+      const s = parseInt(parts[1]) || 0;
+      if (m >= 0 && s >= 0 && s < 60) baseTime = m * 60 + s;
+    }
+  }
+  const sprint = Math.max(0, Math.min(5, sprintCount));
+  const mountain = Math.max(0, Math.min(5, mountainCount));
+  const editing = state.editingStageIdx != null && state.editingStageIdx >= 0 && state.editingStageIdx < state.customStages.length;
+  if (editing) {
+    const st = state.customStages[state.editingStageIdx];
+    st.start = start; st.end = end; st.baseTime = baseTime;
+    st.sprint = sprint; st.mountain = mountain;
+    if (dist) st.distance = parseFloat(dist); else delete st.distance;
+  } else {
+    const id = 'cust_' + Date.now() + '_' + Math.random().toString(36).substr(2,4);
+    const stage = {id, start, end, baseTime, sprint, mountain};
+    if (dist) stage.distance = parseFloat(dist);
+    state.customStages.push(stage);
+  }
+  state.editingStageIdx = null;
+  saveCustomStages();
+  saveGame();
+  state.screen = state.gameMode === 'stageRace' ? 'stageSelection' : 'singleStageSelect';
+  render();
+}
+
+function initTeams() {
+  const num = state.numTeams;
+  state.teams = [];
+  const ridersPerTeam = state.teamSize;
+  const teamNames = ['Zelený', 'Červený', 'Modrý', 'Fialový', 'Oranžový', 'Žltý'];
+  for (let i = 0; i < num; i++) {
+    const riders = [];
+    const startNum = i * 6 + 1;
+    for (let ri = 0; ri < ridersPerTeam; ri++) {
+      const id = `r_${i}_${ri}`;
+      riders.push({id, name: genRiderName(), number: startNum + ri});
+    }
+    state.teams.push({id:i, name: teamNames[i] || `Tím ${i+1}`, color:TEAM_COLORS[i], riders});
+  }
+  saveGame();
+  goScreen('teamSetup');
+}
+
+function changeTeamColor(idx, color) {
+  if (state.teams[idx]) state.teams[idx].color = color;
+  saveGame();
+}
+
+function changeTeamName(idx, val) {
+  if (state.teams[idx]) state.teams[idx].name = val;
+  saveGame();
+}
+
+function changeRiderName(id, val) {
+  const info = findRider(id);
+  if (info) info.rider.name = val;
+  saveGame();
+}
+
+function confirmTeams() {
+  goScreen('startList');
+}
+
+function startDrawOrder() {
+  const firstStageId = state.selectedStageIds[0];
+  const allStages = getAllStages();
+  const stage = allStages.find(s => s.id === firstStageId) || getStage(firstStageId);
+  if (!stage) { goScreen('stageSelection'); return; }
+  if (!state.race) {
+    state.race = {
+      stage: {...stage},
+      turn: 0,
+      riderResults: {},
+      finishGroups: [],
+      startingOrder: null,
+      sprintAwards: 0,
+      mountainAwards: 0,
+      complete: false,
+      _bonusApplied: false,
+      _currentSprintAward: null,
+      _currentMountainAward: null,
+    };
+    ensureRiderResults();
+  }
+  goScreen('drawOrder');
+}
+
+function drawOrder() {
+  const allIds = [];
+  for (let t = 0; t < state.teams.length; t++) {
+    for (const r of state.teams[t].riders) allIds.push(r.id);
+  }
+  for (let i = allIds.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [allIds[i], allIds[j]] = [allIds[j], allIds[i]];
+  }
+  state.race.startingOrder = allIds;
+  saveGame();
+  render();
+}
+
+function startRace() {
+  goScreen('race');
+}
+
+function doTurn() {
+  if (!state.race) return;
+  state.race.turn++;
+  saveGame();
+  render();
+}
+
+function getSprintAwardsLeft() {
+  if (!state.race) return 0;
+  const used = state.race._sprintUsed || 0;
+  return Math.max(0, state.race.stage.sprint - used);
+}
+
+function getMountainAwardsLeft() {
+  if (!state.race) return 0;
+  const used = state.race._mountainUsed || 0;
+  return Math.max(0, state.race.stage.mountain - used);
+}
+
+function doSprint() {
+  if (!state.race || state.race.stage.sprint < 1) return;
+  const avail = getAvailableRiderIds();
+  if (avail.length < 1) { alert('Všetci jazdci už došli do cieľa'); return; }
+  const left = getSprintAwardsLeft();
+  if (left < 1) { alert('Všetky sprintérske prémie už boli udelené'); return; }
+  if (!state.race._currentSprintAward) {
+    state.race._currentSprintAward = {riderIds: []};
+  }
+  state.dialog = {type:'sprint', selected:[], award: state.race._currentSprintAward};
+  render();
+}
+
+function doMountain() {
+  if (!state.race || state.race.stage.mountain < 1) return;
+  const avail = getAvailableRiderIds();
+  if (avail.length < 1) { alert('Všetci jazdci už došli do cieľa'); return; }
+  const left = getMountainAwardsLeft();
+  if (left < 1) { alert('Všetky vrchárske prémie už boli udelené'); return; }
+  if (!state.race._currentMountainAward) {
+    state.race._currentMountainAward = {riderIds: []};
+  }
+  state.dialog = {type:'mountain', selected:[], award: state.race._currentMountainAward};
+  render();
+}
+
+function doFinish() {
+  if (!state.race) return;
+  const avail = getAvailableRiderIds();
+  if (avail.length < 1) { alert('Všetci jazdci už sú v cieli alebo DNF'); return; }
+  state.dialog = {type:'finishTime', extraSeconds: 0};
+  render();
+}
+
+function confirmSprintMountain(type) {
+  if (!state.dialog || !state.dialog.selected) return;
+  const selected = state.dialog.selected;
+  if (selected.length < 1) { closeDialog(); return; }
+  const points = [5, 3, 2, 1];
+  const award = type === 'sprint' ? state.race._currentSprintAward : state.race._currentMountainAward;
+  if (!award) return;
+  const startIdx = award.riderIds.length;
+  for (let i = 0; i < selected.length && (startIdx + i) < 4; i++) {
+    const id = selected[i];
+    const ptIdx = startIdx + i;
+    if (state.race.riderResults[id]) {
+      if (type === 'sprint') state.race.riderResults[id].sprintPoints += points[ptIdx];
+      else state.race.riderResults[id].mountainPoints += points[ptIdx];
+      award.riderIds.push(id);
+    }
+  }
+  if (award.riderIds.length >= 4) {
+    if (type === 'sprint') state.race._sprintUsed = (state.race._sprintUsed || 0) + 1;
+    else state.race._mountainUsed = (state.race._mountainUsed || 0) + 1;
+    if (type === 'sprint') state.race._currentSprintAward = null;
+    else state.race._currentMountainAward = null;
+  }
+  saveGame();
+  closeDialog();
+  render();
+}
+
+function finishSprintAward(type) {
+  if (type === 'sprint') {
+    state.race._sprintUsed = (state.race._sprintUsed || 0) + 1;
+    state.race._currentSprintAward = null;
+  } else {
+    state.race._mountainUsed = (state.race._mountainUsed || 0) + 1;
+    state.race._currentMountainAward = null;
+  }
+  saveGame();
+  closeDialog();
+  render();
+}
+
+function confirmFinishTime() {
+  const input = document.getElementById('finishTimeInput');
+  const dnfCheck = document.getElementById('finishDnfCheck');
+  let extra = 0;
+  let isDnf = dnfCheck && dnfCheck.checked;
+  if (!isDnf) {
+    extra = parseInt(input?.value) || 0;
+    if (extra < 0) extra = 0;
+  }
+  const avail = getAvailableRiderIds();
+  if (isDnf) {
+    for (const id of avail) {
+      if (state.race.riderResults[id]) {
+        state.race.riderResults[id].isDnf = true;
+      }
+    }
+    saveGame();
+    const allDone = Object.keys(state.race.riderResults).every(id => state.race.riderResults[id].stageTime != null || state.race.riderResults[id].isDnf);
+    if (allDone) {
+      state.race.complete = true;
+      applyFinishTimes();
+      stageComplete();
+      return;
+    }
+    closeDialog();
+    render();
+    return;
+  }
+  state.dialog = {type:'finishRiders', extraSeconds: extra, selected: []};
+  render();
+}
+
+function saveFinishGroup() {
+  if (!state.dialog || !state.dialog.selected || state.dialog.selected.length < 1) { closeDialog(); return; }
+  const extra = state.dialog.extraSeconds || 0;
+  const riderIds = state.dialog.selected;
+  const turn = state.race.turn;
+  const stage = state.race.stage;
+  const groupTime = stage.baseTime + turn * 60 + extra;
+  const alreadyFinished = getFinishedRiderIds().length;
+  for (let i = 0; i < riderIds.length; i++) {
+    const id = riderIds[i];
+    if (state.race.riderResults[id]) {
+      state.race.riderResults[id].stageTime = groupTime;
+      state.race.riderResults[id].finishExtra = extra;
+      state.race.riderResults[id].finishOrder = alreadyFinished + i;
+    }
+  }
+  state.race.finishGroups.push({extraSeconds:extra, riderIds:[...riderIds]});
+  if (!state.race._bonusApplied) {
+    const allFinishedIds = [];
+    for (const g of state.race.finishGroups) {
+      allFinishedIds.push(...g.riderIds);
+    }
+    if (allFinishedIds.length >= 3) {
+      for (let i = 0; i < 3; i++) {
+        const id = allFinishedIds[i];
+        if (state.race.riderResults[id] && state.race.riderResults[id].stageTime != null) {
+          const bonus = [10, 6, 4][i];
+          state.race.riderResults[id].stageTime -= bonus;
+          state.race.riderResults[id]._timeBonus = bonus;
+        }
+      }
+      state.race._bonusApplied = true;
+    }
+  }
+  saveGame();
+  const allDone = Object.keys(state.race.riderResults).every(id => state.race.riderResults[id].stageTime != null || state.race.riderResults[id].isDnf);
+  if (allDone) {
+    state.race.complete = true;
+    if (!state.race._bonusApplied) applyFinishTimes();
+    closeDialog();
+    stageComplete();
+    return;
+  }
+  closeDialog();
+  render();
+}
+
+
+
+function quickDnfAll() {
+  const avail = getAvailableRiderIds();
+  for (const id of avail) {
+    if (state.race.riderResults[id]) {
+      state.race.riderResults[id].isDnf = true;
+    }
+  }
+  saveGame();
+  state.race.complete = true;
+  applyFinishTimes();
+  closeDialog();
+  stageComplete();
+}
+
+function applyFinishTimes() {
+  if (!state.race) return;
+  const groups = state.race.finishGroups;
+  let allFinishedIds = [];
+  for (const g of groups) {
+    allFinishedIds.push(...g.riderIds);
+  }
+  let orderCounter = allFinishedIds.length;
+  for (const [id, rr] of Object.entries(state.race.riderResults)) {
+    if (rr.isDnf && rr.finishOrder == null) {
+      rr.finishOrder = orderCounter++;
+    }
+  }
+  if (!state.race._bonusApplied) {
+    for (let i = 0; i < Math.min(3, allFinishedIds.length); i++) {
+      const id = allFinishedIds[i];
+      if (state.race.riderResults[id] && state.race.riderResults[id].stageTime != null) {
+        const bonus = [10, 6, 4][i];
+        state.race.riderResults[id].stageTime -= bonus;
+        state.race.riderResults[id]._timeBonus = bonus;
+      }
+    }
+    state.race._bonusApplied = true;
+  }
+}
+
+function stageComplete() {
+  state.race.complete = true;
+  computeOverall();
+  saveGame();
+  goScreen('stageResults');
+}
+
+function computeOverall() {
+  if (!state.overall) {
+    state.overall = {stages: [], riderTotals: {}, teamTotals: {}};
+  }
+  if (state.race && state.race.complete) {
+    const stage = state.race.stage;
+    const stageKey = stage.id || stage.start+'_'+stage.end;
+    if (state.overall.stages.find(s => s.id === stageKey)) return;
+    state.overall.stages.push({id:stageKey, start:stage.start, end:stage.end});
+    for (const [id, rr] of Object.entries(state.race.riderResults)) {
+      if (!state.overall.riderTotals[id]) state.overall.riderTotals[id] = {time:0, sprint:0, mountain:0};
+      if (rr.stageTime != null) state.overall.riderTotals[id].time += rr.stageTime;
+      else if (rr.isDnf) state.overall.riderTotals[id].time += stage.baseTime + 99999;
+      state.overall.riderTotals[id].sprint += rr.sprintPoints || 0;
+      state.overall.riderTotals[id].mountain += rr.mountainPoints || 0;
+      if (rr.finishOrder != null) {
+        state.overall.riderTotals[id]._lastFinishOrder = rr.finishOrder;
+      }
+    }
+  }
+}
+
+function nextStage() {
+  const currentIdx = state.selectedStageIds.indexOf(state.race.stage.id);
+  const nextIdx = currentIdx + 1;
+  if (nextIdx >= state.selectedStageIds.length) {
+    goScreen('finalResults');
+    return;
+  }
+  const nextStageId = state.selectedStageIds[nextIdx];
+  const allStages = getAllStages();
+  const nextStage = allStages.find(s => s.id === nextStageId);
+  if (!nextStage) { goScreen('finalResults'); return; }
+  let order = null;
+  if (state.overall && state.overall.riderTotals) {
+    const sorted = Object.entries(state.overall.riderTotals)
+      .sort((a, b) => a[1].time - b[1].time)
+      .map(([id]) => id);
+    const allIds = getActiveRiders().map(r => r.id);
+    order = sorted.filter(id => allIds.includes(id));
+    for (const id of allIds) { if (!order.includes(id)) order.push(id); }
+  }
+  state.race = {
+    stage: {...nextStage},
+    turn: 0,
+    riderResults: {},
+    finishGroups: [],
+    startingOrder: order,
+    sprintAwards: 0,
+    mountainAwards: 0,
+    complete: false,
+    _bonusApplied: false,
+    _currentSprintAward: null,
+    _currentMountainAward: null,
+  };
+  ensureRiderResults();
+  saveGame();
+  goScreen('drawOrder');
+}
+
+function goToFinalResults() {
+  computeOverall();
+  goScreen('finalResults');
+}
+
+function showResults() {
+  renderIntermediateResults();
+}
+
+function quitRaceConfirm() {
+  state.dialog = {
+    type: 'confirm',
+    title: 'Ukončiť etapu?',
+    message: 'Naozaj chcete ukončiť túto etapu? Neuložené zmeny sa stratia.',
+    confirmText: 'Áno, ukončiť',
+    cancelText: 'Nie, späť',
+    onConfirm: 'goScreen("mainMenu")',
+  };
+  render();
+}
+
+// ===== INIT =====
+loadState();
+try {
+  if (localStorage.getItem('cyclingRaceSave')) {
+    loadGame();
+  } else {
+    render();
+  }
+} catch(e) { render(); }
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+</script>
+</body>
+</html>

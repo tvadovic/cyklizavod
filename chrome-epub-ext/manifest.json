@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Článok do EPUB",
+  "version": "1.0",
+  "description": "Prevedie webový článok do EPUB súboru s obálkou, nadpisom a autorom",
+  "permissions": ["activeTab", "downloads", "scripting"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Previesť článok do EPUB"
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  }
+}
