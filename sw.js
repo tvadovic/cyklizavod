@@ -1,7 +1,7 @@
 // Service worker: appka funguje aj bez internetu.
 // Súbory appky sa načítajú zo siete, ak je dostupná (vždy najnovšia verzia),
 // inak z vyrovnávacej pamäte. Pri zmene súborov zvýš číslo verzie.
-const CACHE = 'cyklizavod-v3';
+const CACHE = 'cyklizavod-v4';
 const APP = [
   './', 'index.html', 'manifest.json', 'icon.svg', 'icon-192.png', 'icon-512.png',
   'css/app.css', 'js/app.js', 'js/data.js', 'js/rules.js', 'js/store.js', 'js/firebase-config.js',

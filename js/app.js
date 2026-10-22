@@ -56,7 +56,7 @@ async function boot() {
       });
     } catch (e) {
       console.error(e);
-      ui.cloudFailed = true; ui.authReady = true; route();
+      ui.cloud = null; ui.cloudFailed = true; ui.authReady = true; route();
     }
   } else {
     ui.authReady = true;
@@ -95,8 +95,11 @@ async function route() {
       if (!ui.form) ui.form = newForm();
     } else {
       ui.route = { name: 'home' };
-      ui.games = await safe(() => (ui.store.kind === 'cloud' && !ui.user ? [] : ui.store.listGames()), []);
       ui.localGames = ui.store.kind === 'cloud' ? await ui.local.listGames() : [];
+      ui.unsub = ui.store.watchGames((games) => {
+        ui.games = games;
+        if (ui.route.name === 'home') render();
+      });
     }
   }
   render();

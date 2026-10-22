@@ -35,6 +35,7 @@ export class LocalStore {
   }
   emit(id) {
     for (const cb of this.listeners.get(id) || []) cb(this.read(id));
+    for (const cb of this.listeners.get('*') || []) this.listGames().then(cb);
   }
   async listGames() {
     const out = [];
@@ -43,6 +44,12 @@ export class LocalStore {
       if (k.startsWith(KEY)) { const g = this.read(k.slice(KEY.length)); if (g) out.push(g); }
     }
     return out.sort((a, b) => b.updatedAt - a.updatedAt);
+  }
+  watchGames(cb) {
+    if (!this.listeners.has('*')) this.listeners.set('*', new Set());
+    this.listeners.get('*').add(cb);
+    this.listGames().then(cb);
+    return () => this.listeners.get('*')?.delete(cb);
   }
   watchGame(id, cb) {
     if (!this.listeners.has(id)) this.listeners.set(id, new Set());
@@ -125,6 +132,11 @@ export class CloudStore {
     const q = query(collection(this.db, 'games'), where('members', 'array-contains', this.user.uid));
     const snap = await getDocs(q);
     return snap.docs.map((d) => ({ ...d.data(), id: d.id })).sort((a, b) => b.updatedAt - a.updatedAt);
+  }
+  watchGames(cb) {
+    const { collection, query, where, onSnapshot } = this.f;
+    const q = query(collection(this.db, 'games'), where('members', 'array-contains', this.user.uid));
+    return onSnapshot(q, (snap) => cb(snap.docs.map((d) => ({ ...d.data(), id: d.id })).sort((a, b) => b.updatedAt - a.updatedAt)), (e) => { console.error(e); cb([]); });
   }
   watchGame(id, cb) {
     return this.f.onSnapshot(this.ref(id), (d) => cb(d.exists() ? { ...d.data(), id: d.id } : null), () => cb(null));
