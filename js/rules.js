@@ -6,7 +6,9 @@
 // Udalosti (všetky majú id, t = čas zápisu, stage = index etapy):
 //   start  { order }                 začiatok etapy, štartové poradie jazdcov
 //   turn   {}                        TURN, začiatok ďalšieho kola (sekvencie)
-//   prime  { kind, riders }          prémia: kind 'sprint' | 'mountain', jazdci v poradí (max 4)
+//   prime  { kind, riders }          prémia: kind 'sprint' | 'mountain', jazdci v poradí prejazdu.
+//                                    Jazdci sa môžu dopisovať po kolách, prémia sa uzavrie po štvrtom.
+//   prime-close { kind }             ručné uzavretie prémie, ktorou prešlo menej ako 4 jazdcov
 //   finish { seconds, riders }       skupina v cieli: sekundová hodnota políčka a jazdci v poradí
 //   dnf    { rider }                 jazdec odstúpil (Big Crash)
 //   card   { rider, card }           použitá karta 'yellow' | 'green' | 'polka'
@@ -39,6 +41,9 @@ export function fmtGap(sec) {
   return m ? `+${m}:${String(s).padStart(2, '0')}` : `+${s}"`;
 }
 
+const primeClosed = (p) => p.closed || p.riders.length >= PRIME_POINTS.length;
+const openPrime = (st, kind) => st.primes.find((p) => p.kind === kind && !primeClosed(p)) || null;
+
 function emptyStage(def, index) {
   return { def, index, started: false, order: [], turns: 0, primes: [], groups: [], dnf: [], cards: [] };
 }
@@ -55,7 +60,13 @@ export function derive(game) {
     switch (ev.type) {
       case 'start': st.started = true; st.order = ev.order; break;
       case 'turn': st.turns++; break;
-      case 'prime': st.primes.push({ kind: ev.kind, riders: ev.riders }); break;
+      case 'prime': {
+        const open = openPrime(st, ev.kind);
+        if (open) open.riders = [...open.riders, ...ev.riders];
+        else st.primes.push({ kind: ev.kind, riders: [...ev.riders], closed: false });
+        break;
+      }
+      case 'prime-close': { const open = openPrime(st, ev.kind); if (open) open.closed = true; break; }
       case 'finish': st.groups.push({ seconds: ev.seconds, turns: st.turns, riders: ev.riders }); break;
       case 'dnf': st.dnf.push(ev.rider); break;
       case 'card': st.cards.push({ rider: ev.rider, card: ev.card }); break;
@@ -94,10 +105,14 @@ export function derive(game) {
         st.points[p.kind][id] = (st.points[p.kind][id] || 0) + (PRIME_POINTS[i] || 0);
       });
     }
-    st.primeCount = {
-      sprint: st.primes.filter((p) => p.kind === 'sprint').length,
-      mountain: st.primes.filter((p) => p.kind === 'mountain').length,
-    };
+    // primeCount = začaté prémie, primeDone = uzavreté, open = prémia, do ktorej sa ešte dopisuje.
+    st.primeCount = {}; st.primeDone = {}; st.open = {};
+    for (const k of ['sprint', 'mountain']) {
+      const list = st.primes.filter((p) => p.kind === k);
+      st.primeCount[k] = list.length;
+      st.primeDone[k] = list.filter(primeClosed).length;
+      st.open[k] = openPrime(st, k);
+    }
 
     for (const id of st.dnf) out.add(id);
 
@@ -217,12 +232,19 @@ export function validate(game, derived, ev) {
   switch (ev.type) {
     case 'turn': return null;
     case 'prime': {
-      if (!ev.riders.length || ev.riders.length > 4) return 'Vyber 1 až 4 jazdcov.';
+      const open = st.open[ev.kind];
+      const free = PRIME_POINTS.length - (open ? open.riders.length : 0);
+      if (!ev.riders.length) return 'Vyber aspoň jedného jazdca.';
+      if (ev.riders.length > free) return `Body dostávajú len prví štyria, zostáva ${free} ${free === 1 ? 'miesto' : 'miesta'}.`;
       const limit = ev.kind === 'sprint' ? st.def.sprints : st.def.mountains;
-      if (st.primeCount[ev.kind] >= limit) return ev.kind === 'sprint' ? 'Všetky sprinty v etape sú už zapísané.' : 'Všetky vrchárske prémie v etape sú už zapísané.';
+      if (!open && st.primeCount[ev.kind] >= limit) return ev.kind === 'sprint' ? 'Všetky sprinty v etape sú už zapísané.' : 'Všetky vrchárske prémie v etape sú už zapísané.';
+      if (open && ev.riders.some((id) => open.riders.includes(id))) return 'Jazdec už je v tejto prémii zapísaný.';
+      if (new Set(ev.riders).size !== ev.riders.length) return 'Jazdec je vybraný dvakrát.';
       if (ev.riders.some((id) => !racing.has(id))) return 'Prémiu môžu získať len jazdci, ktorí sú ešte v pretekoch.';
       return null;
     }
+    case 'prime-close':
+      return st.open[ev.kind] ? null : 'Žiadna otvorená prémia.';
     case 'finish':
       if (st.turns < 1) return 'Najprv spusti etapu tlačidlom TURN.';
       if (!ev.riders.length) return 'Vyber aspoň jedného jazdca.';

@@ -182,6 +182,7 @@ input[type=text], input[type=number], select {
 }
 .actions .inner { max-width: 720px; margin: 0 auto; display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 8px; }
 .actions .btn { min-height: 56px; padding: 0 6px; font-size: .95rem; flex-direction: column; gap: 0; line-height: 1.1; }
+.actions .btn.open { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
 .actions .btn small { font-weight: 400; font-size: .72rem; opacity: .75; }
 .actions .turn { font-family: var(--display); font-size: 1.5rem; letter-spacing: .02em; }
 .tools { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }

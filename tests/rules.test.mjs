@@ -109,3 +109,26 @@ test('celkové poradie pri rovnosti času rozhodne súčet umiestnení', () => {
   assert.equal(s.teams[0].slot, 1);
   assert.equal(s.teams[1].gap, 90);
 });
+
+test('prémia sa dopĺňa po kolách a uzavrie po štvrtom jazdcovi alebo ručne', () => {
+  const g = makeGame();
+  g.events = [ev(0, 'start', { order: [] }), ev(0, 'turn'), ev(0, 'prime', { kind: 'sprint', riders: ['r1'] }), ev(0, 'turn')];
+  let d = derive(g);
+  assert.equal(d.stages[0].open.sprint.riders.length, 1);
+  assert.equal(validate(g, d, ev(0, 'prime', { kind: 'sprint', riders: ['r1'] })), 'Jazdec už je v tejto prémii zapísaný.');
+  assert.notEqual(validate(g, d, ev(0, 'prime', { kind: 'sprint', riders: ['g1', 'g2', 'g3', 'r2'] })), null);
+  g.events.push(ev(0, 'prime', { kind: 'sprint', riders: ['g1', 'g2'] }), ev(0, 'turn'), ev(0, 'prime', { kind: 'sprint', riders: ['g3'] }));
+  d = derive(g);
+  assert.equal(d.stages[0].open.sprint, null);
+  assert.equal(d.stages[0].primeDone.sprint, 1);
+  g.events.push(ev(0, 'finish', { seconds: 0, riders: ['g1', 'g2', 'g3', 'r1', 'r2', 'r3'] }));
+  assert.deepEqual(derive(g).standings[0].sprint.map((r) => [r.id, r.sprint]), [['r1', 5], ['g1', 3], ['g2', 2], ['g3', 1]]);
+
+  // Ručné uzavretie: druhý vrch Alpe d'Huez s dvoma jazdcami.
+  const h = makeGame([OFFICIAL_STAGES[1]]);
+  h.events = [ev(0, 'start', { order: [] }), ev(0, 'turn'), ev(0, 'prime', { kind: 'mountain', riders: ['g1', 'r1'] }), ev(0, 'prime-close', { kind: 'mountain' })];
+  d = derive(h);
+  assert.equal(d.stages[0].primeDone.mountain, 1);
+  assert.equal(validate(h, d, ev(0, 'prime', { kind: 'mountain', riders: ['g2'] })), null); // ďalší vrch
+  assert.equal(validate(h, d, ev(0, 'prime-close', { kind: 'mountain' })), 'Žiadna otvorená prémia.');
+});

@@ -289,8 +289,12 @@ function viewRace(st) {
   const clock = st.turns ? fmtTime(finishTime(st.def, st.turns, 0)) : fmtBase(st.def.baseMin);
   const inCount = st.racing.length, finCount = st.finished.size;
   const chips = [];
-  for (let i = 0; i < st.def.sprints; i++) chips.push(`<span class="chip${st.primeCount.sprint > i ? ' done' : ''}"><i class="dot" style="background:var(--green)"></i>Sprint ${st.def.sprints > 1 ? i + 1 : ''}</span>`);
-  for (let i = 0; i < st.def.mountains; i++) chips.push(`<span class="chip${st.primeCount.mountain > i ? ' done' : ''}"><i class="dot j-polka"></i>Vrch ${st.def.mountains > 1 ? i + 1 : ''}</span>`);
+  const primeChip = (kind, i, label, dot) => {
+    const open = st.open[kind] && st.primeDone[kind] === i;
+    return `<span class="chip${st.primeDone[kind] > i ? ' done' : ''}"><i class="dot ${dot}"></i>${label}${st.def[kind === 'sprint' ? 'sprints' : 'mountains'] > 1 ? ` ${i + 1}` : ''}${open ? ` (${st.open[kind].riders.length}/4)` : ''}</span>`;
+  };
+  for (let i = 0; i < st.def.sprints; i++) chips.push(primeChip('sprint', i, 'Sprint', 'j-green'));
+  for (let i = 0; i < st.def.mountains; i++) chips.push(primeChip('mountain', i, 'Vrch', 'j-polka'));
   chips.push(`<span class="chip${finCount ? ' done' : ''}"><i class="dot" style="background:#fff"></i>Cieľ</span>`);
 
   const cards = st.leaders ? ['yellow', 'green', 'polka'].filter((c) => st.leaders[c]).map((c) => {
@@ -313,7 +317,13 @@ function viewRace(st) {
       }).join('')}</div></div></div>`).join('');
 
   const last = g.events[g.events.length - 1];
-  const sprintLeft = st.primeCount.sprint < st.def.sprints, mountLeft = st.primeCount.mountain < st.def.mountains;
+  const primeBtn = (kind, label) => {
+    const limit = kind === 'sprint' ? st.def.sprints : st.def.mountains;
+    const open = st.open[kind];
+    const ok = st.turns && (open || st.primeCount[kind] < limit);
+    const info = open ? `${open.riders.length}/4 jazdci` : `${st.primeDone[kind]}/${limit}`;
+    return `<button class="btn${open ? ' open' : ''}" data-act="sheet" data-type="${kind}" ${ok ? '' : 'disabled'}>${label}<small>${info}</small></button>`;
+  };
   return `
     <div class="board">
       <div class="stage"><span>${stageLabel(st)}: ${esc(st.def.name)}</span><a href="#/" style="color:inherit" aria-label="Domov">✕</a></div>
@@ -330,8 +340,8 @@ function viewRace(st) {
     </div>
     <div class="actions"><div class="inner">
       <button class="btn primary turn" data-act="turn">TURN</button>
-      <button class="btn" data-act="sheet" data-type="sprint" ${sprintLeft && st.turns ? '' : 'disabled'}>Sprint<small>${st.primeCount.sprint}/${st.def.sprints}</small></button>
-      <button class="btn" data-act="sheet" data-type="mountain" ${mountLeft && st.turns ? '' : 'disabled'}>Vrch<small>${st.primeCount.mountain}/${st.def.mountains}</small></button>
+      ${primeBtn('sprint', 'Sprint')}
+      ${primeBtn('mountain', 'Vrch')}
       <button class="btn dark" data-act="sheet" data-type="finish" ${st.turns ? '' : 'disabled'}>Cieľ<small>skupina</small></button>
     </div></div>`;
 }
@@ -342,6 +352,7 @@ function describe(ev) {
     case 'start': return `štart ${ev.stage + 1}. etapy`;
     case 'turn': return 'TURN';
     case 'prime': return `${ev.kind === 'sprint' ? 'sprint' : 'vrch'} ${nums(ev.riders)}`;
+    case 'prime-close': return `uzavretie ${ev.kind === 'sprint' ? 'sprintu' : 'vrchu'}`;
     case 'finish': return `cieľ ${nums(ev.riders)}`;
     case 'dnf': return `DNF ${nums([ev.rider])}`;
     case 'card': return cardName[ev.card].toLowerCase();
@@ -429,12 +440,12 @@ function viewFinal() {
 
 // ---------- Dialógy ----------
 
-function pickGrid(ids, sel) {
+function pickGrid(ids, sel, offset = 0) {
   const byTeam = new Map();
   for (const id of ids) { const t = rider(id).team; if (!byTeam.has(t)) byTeam.set(t, []); byTeam.get(t).push(id); }
   return [...byTeam].map(([slot, list]) => `<div class="pick-team"><div class="tname">${esc(team(slot).name)}</div><div class="pick">${list.map((id) => {
     const i = sel.indexOf(id);
-    return `<button class="${i >= 0 ? 'sel' : ''}" data-act="pick" data-id="${id}" aria-pressed="${i >= 0}" aria-label="${esc(rider(id).name)}">${bib(id)}${i >= 0 ? `<span class="ord">${i + 1}</span>` : ''}</button>`;
+    return `<button class="${i >= 0 ? 'sel' : ''}" data-act="pick" data-id="${id}" aria-pressed="${i >= 0}" aria-label="${esc(rider(id).name)}">${bib(id)}${i >= 0 ? `<span class="ord">${i + 1 + offset}</span>` : ''}</button>`;
   }).join('')}</div></div>`).join('');
 }
 
@@ -442,10 +453,15 @@ function viewSheet() {
   const sh = ui.sheet, st = ui.d?.current;
   let body = '';
   if (sh.type === 'sprint' || sh.type === 'mountain') {
-    const no = st.primeCount[sh.type] + 1;
-    body = `<h2>${sh.type === 'sprint' ? 'Sprint' : 'Vrchárska prémia'} ${no}</h2>
-      <p class="muted small">Ťukni na jazdcov v poradí, v akom prešli čiarou. Body ${PRIME_POINTS.join('-')}.</p>
-      ${pickGrid(st.racing, sh.sel)}
+    const open = st.open[sh.type];
+    const done = open ? open.riders : [];
+    const no = open ? st.primeCount[sh.type] : st.primeCount[sh.type] + 1;
+    const name = sh.type === 'sprint' ? 'Sprint' : 'Vrchárska prémia';
+    body = `<h2>${name} ${no}</h2>
+      ${done.length ? `<p class="small" style="margin-bottom:6px">Už zapísaní:</p><div class="row">${done.map((id, i) => `<span class="rider-state">${bib(id, { sm: true })}<span>${PRIME_POINTS[i]} b.</span></span>`).join('')}</div>` : ''}
+      <p class="muted small" style="margin-top:10px">Ťukni na jazdcov, ktorí prešli čiarou v tomto kole, v poradí prejazdu. Body ${PRIME_POINTS.join('-')} pre prvých štyroch, zostáva ${4 - done.length} ${4 - done.length === 1 ? 'miesto' : 'miesta'}. Ostatných dopíšeš v ďalšom kole.</p>
+      ${pickGrid(st.racing.filter((id) => !done.includes(id)), sh.sel, done.length)}
+      ${open ? `<div class="row" style="margin-top:12px"><button class="btn small" data-act="close-prime">Uzavrieť prémiu, nikto ďalší neprejde</button></div>` : ''}
       <div class="foot"><button class="btn" data-act="close">Zrušiť</button><button class="btn primary" data-act="save" ${sh.sel.length ? '' : 'disabled'}>Zapísať ${sh.sel.length || ''}</button></div>`;
   } else if (sh.type === 'finish') {
     const t = finishTime(st.def, st.turns, sh.seconds);
@@ -602,12 +618,15 @@ const actions = {
     const sh = ui.sheet, i = sh.sel.indexOf(id);
     if (i >= 0) sh.sel.splice(i, 1);
     else if (sh.type === 'dnf') sh.sel = [id];
-    else if ((sh.type === 'sprint' || sh.type === 'mountain') && sh.sel.length >= 4) toast('Body dostávajú len prví štyria.');
+    else if ((sh.type === 'sprint' || sh.type === 'mountain') && sh.sel.length >= 4 - (ui.d.current.open[sh.type]?.riders.length || 0)) toast('Body dostávajú len prví štyria.');
     else sh.sel.push(id);
   },
   'pick-all'() {
     const sh = ui.sheet;
     for (const id of ui.d.current.racing) if (!sh.sel.includes(id)) sh.sel.push(id);
+  },
+  'close-prime'() {
+    if (commit({ type: 'prime-close', stage: ui.d.current.index, kind: ui.sheet.type })) ui.sheet = null;
   },
   sec({ d }) { ui.sheet.seconds = Math.min(59, Math.max(0, ui.sheet.seconds + +d)); },
   save() {
