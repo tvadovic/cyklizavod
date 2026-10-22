@@ -1,23 +1,17 @@
 {
-  "name": "Cyklistický Závod",
-  "short_name": "CyklioZávod",
-  "description": "Digitálna časomiera a výsledkový systém pre cyklistické závody",
-  "start_url": "index.html",
+  "name": "Cyklizávod",
+  "short_name": "Cyklizávod",
+  "description": "Časomiera a výsledky pre Tour de France Board Game",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#1a1a2e",
-  "theme_color": "#1a1a2e",
+  "orientation": "portrait",
+  "background_color": "#eef1f4",
+  "theme_color": "#26313d",
+  "lang": "sk",
   "icons": [
-    {
-      "src": "icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    }
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ]
 }
